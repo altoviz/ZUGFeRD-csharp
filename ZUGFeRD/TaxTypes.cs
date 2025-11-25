@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -25,7 +25,7 @@ namespace s2industries.ZUGFeRD
 {
     /// <summary>
     /// Please note that all profiles support VAT.
-    /// 
+    ///
     /// Only EXTENDED profile supports tax types other than VAT.
     /// http://www.unece.org/trade/untdid/d00a/tred/tred5153.htm
     /// </summary>
@@ -55,25 +55,25 @@ namespace s2industries.ZUGFeRD
         AAC,
         /// <summary>
         /// Tobacco tax
-        /// 
+        ///
         /// A tax levied on tobacco products.
         /// </summary>
         AAD,
         /// <summary>
         /// Energy fee
-        /// 
+        ///
         /// General fee or tax for the use of energy.
         /// </summary>
         AAE,
         /// <summary>
         /// Coffee tax
-        /// 
+        ///
         /// A tax levied specifically on coffee products.
         /// </summary>
         AAF,
         /// <summary>
         /// Harmonised sales tax, Canadian
-        /// 
+        ///
         /// A harmonized sales tax consisting of a goods and service
         /// tax, a Canadian provincial sales tax and, as applicable,
         /// a Quebec sales tax which is recoverable.
@@ -81,41 +81,41 @@ namespace s2industries.ZUGFeRD
         AAG,
         /// <summary>
         /// Quebec sales tax
-        /// 
+        ///
         /// A sales tax charged within the Canadian province of
         /// Quebec which is recoverable.
         /// </summary>
         AAH,
         /// <summary>
         /// Canadian provincial sales tax
-        /// 
+        ///
         /// A sales tax charged within Canadian provinces which is
         /// non-recoverable.
         /// </summary>
         AAI,
         /// <summary>
         /// Tax on replacement part
-        /// 
+        ///
         /// A tax levied on a replacement part, where the original
         /// part is returned.
         /// </summary>
         AAJ,
         /// <summary>
         /// Mineral oil tax
-        /// 
+        ///
         /// Tax that is levied specifically on products containing
         /// mineral oil.
         /// </summary>
         AAK,
         /// <summary>
         /// Special tax
-        /// 
+        ///
         /// To indicate a special type of tax.
         /// </summary>
         AAL,
         /// <summary>
         /// Insurance tax
-        /// 
+        ///
         /// A tax levied specifically on insurances.
         /// </summary>
         AAM,
@@ -304,7 +304,7 @@ namespace s2industries.ZUGFeRD
         ///
         ///Anti-dumping duty paid by posting a bond during an
         ///investigation period prior to a formal decision on
-        ///dumping by Customs.        
+        ///dumping by Customs.
         PDB,
         /// <summary>
 		///Provisional duty cash
@@ -397,38 +397,11 @@ namespace s2industries.ZUGFeRD
         VAD,
         /// <summary>
         /// Value added tax
-        /// 
+        ///
         /// A tax on domestic or imported goods applied to the value
         /// added at each stage in the production/distribution
         /// cycle.
         /// </summary>
-        VAT,
-        
-        /// <summary>
-        /// Invalid tax type
-        /// </summary>
-        Unknown
-    }
-
-
-    internal static class TaxTypesExtensions
-    {
-        public static TaxTypes FromString(this TaxTypes _, string s)
-        {
-            try
-            {
-                return (TaxTypes)Enum.Parse(typeof(TaxTypes), s);
-            }
-            catch
-            {
-                return TaxTypes.Unknown;
-            }
-        } // !FromString()
-
-
-        public static string EnumToString(this TaxTypes t)
-        {
-            return t.ToString("g");
-        } // !ToString()
+        VAT
     }
 }

@@ -25,7 +25,7 @@ namespace s2industries.ZUGFeRD
 {
     /// <summary>
     /// For a reference see:
-    /// http://www.unece.org/trade/untdid/d00a/tred/tred1153.htm
+    /// https://service.unece.org/trade/untdid/d21a/tred/tred1153.htm
     /// </summary>
     public enum TaxRegistrationSchemeID
     {
@@ -59,14 +59,11 @@ namespace s2industries.ZUGFeRD
     {
         public static TaxRegistrationSchemeID FromString(this TaxRegistrationSchemeID _, string s)
         {
-            try
+            if (Enum.TryParse(s, true, out TaxRegistrationSchemeID result))
             {
-                return (TaxRegistrationSchemeID)Enum.Parse(typeof(TaxRegistrationSchemeID), s);
+                return result;
             }
-            catch
-            {
-                return TaxRegistrationSchemeID.Unknown;
-            }
+            return TaxRegistrationSchemeID.Unknown;
         } // !FromString()
 
 

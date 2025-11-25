@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -23,37 +23,73 @@ using System.Text;
 
 namespace s2industries.ZUGFeRD
 {
+
     /// <summary>
-    /// http://www.stylusstudio.com/edifact/D02A/4451.htm
+    /// UNTDID 4451 — Text subject qualifier
+    /// Version 24A
+    /// https://service.unece.org/trade/untdid/d23a/tred/tred4451.htm
     /// </summary>
     public enum SubjectCodes
     {
         /// <summary>
+        /// Terms of payments
+        /// </summary>
+        /// [4276] Conditions of payment between the parties to a transaction(generic term).
+        AAB,
+
+        /// <summary>
+        /// Dangerous goods additional information
+        /// </summary>
+        /// Additional information concerning dangerous goods.
+        AAC,
+
+        /// <summary>
+        /// General information
+        ///
         /// Generelle Informationen
         /// </summary>
         /// Generelle Informationen zu diesem Kauf
         AAI,
+
         /// <summary>
         /// Zusätzliche Konditionen zu diesem Kauf
-        /// 
+        ///
         /// Angaben zum Eigentumsvorbehalt
         /// </summary>
         AAJ,
-        
+
         /// <summary>
+        /// Price conditions
+        /// 
+        /// Preiskonditionen
+        ///
+        /// Angaben zu Entgeltminderungen
+        /// </summary>
+        AAK,
+
+        /// <summary>
+        /// Government information
+        /// </summary>
+        /// Self explanatory.
+        ABL,
+
+        /// <summary>
+        /// Accounting information
+        ///
         /// Buchhaltungsinformationen
         /// </summary>
         /// Informationen für die Buchaltung zu diesem Kauf
         ABN,
 
         /// <summary>
-        /// Preiskonditionen
-        /// 
-        /// Angaben zu Entgeltminderungen
+        /// Factor assignment clause
         /// </summary>
-        AAK,
-        
+        /// Assignment based on an agreement between seller and factor.
+        ACC,
+
         /// <summary>
+        /// Additional information
+        ///
         /// Zusätzliche Angaben
         /// </summary>
         /// Zusaätzliche Angaben zu diesem Kauf
@@ -65,16 +101,48 @@ namespace s2industries.ZUGFeRD
         ADU,
 
         /// <summary>
+        /// Instructions to the paying and/or accepting and/or negotiating bank
+        /// </summary>
+        AET,
+
+        /// <summary>
+        /// Waste information
+        /// </summary>
+        /// Text describing waste related information.
+        BLU,
+
+        /// <summary>
+        /// Order information
+        /// </summary>
+        COI,
+
+        /// <summary>
+        /// Customs declaration information
+        /// </summary>
+        /// Note contains customs declaration information.
+        CUS,
+
+        /// <summary>
+        /// Payment detail/remittance information
+        /// </summary>
+        /// The free text contains payment details.
+        PMD,
+
+        /// <summary>
+        /// Payment information
+        ///
         /// Zahlungsinformation
-        /// 
+        ///
         /// Bekanntgabe der Abtretung der
         /// Forderung (Zession)
         /// </summary>
         PMT,
 
         /// <summary>
+        /// Price calculation formula
+        ///
         /// Preiskalkulationsschema
-        /// 
+        ///
         /// Zum Beispiel Angabe Zählerstand,
         /// Zähler etc. oder andere Hinweise
         /// bezüglich Abrechnung.
@@ -82,8 +150,10 @@ namespace s2industries.ZUGFeRD
         PRF,
 
         /// <summary>
+        /// Regulatory information
+        ///
         /// Regulatorische Informationen
-        /// 
+        ///
         /// Angaben zum leistenden Unternehmen
         /// (Angabe Geschäftsführer, HR-Nummer
         /// etc.)
@@ -97,31 +167,10 @@ namespace s2industries.ZUGFeRD
         SUR,
 
         /// <summary>
-        /// Unknon/ invalid subject code
+        /// Tax declaration
+        ///
+        /// Grund der Steuerbefreiung
         /// </summary>
-        Unknown
-    }
-
-
-
-    internal static class SubjectCodesExtensions
-    {
-        public static SubjectCodes FromString(this SubjectCodes _, string s)
-        {
-            try
-            {
-                return (SubjectCodes)Enum.Parse(typeof(SubjectCodes), s);
-            }
-            catch
-            {
-                return SubjectCodes.Unknown;
-            }
-        } // !FromString()
-
-
-        public static string EnumToString(this SubjectCodes codes)
-        {
-            return codes.ToString("g");
-        } // !ToString()
+        TXD
     }
 }

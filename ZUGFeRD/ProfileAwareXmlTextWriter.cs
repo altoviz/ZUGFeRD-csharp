@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -19,6 +19,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using System.Xml;
 
@@ -33,80 +35,93 @@ namespace s2industries.ZUGFeRD
 
     internal class ProfileAwareXmlTextWriter
     {
-        private XmlTextWriter TextWriter;
+        private XmlWriter TextWriter;
         private Stack<StackInfo> XmlStack = new Stack<StackInfo>();
         private Profile CurrentProfile = Profile.Unknown;
+        private Dictionary<string, string> Namespaces = new Dictionary<string, string>();
+        private bool _AutomaticallyCleanInvalidXmlCharacters = false;
+
+        /// <summary>
+        /// In case we are writing raw values, the automatic indention of end elements might get broken.
+        /// In order to heal that, we need to manually add indention.
+        /// </summary>
+        private bool _NeedToIndentEndElement = false;
 
 
-        public System.Xml.Formatting Formatting
+        public ProfileAwareXmlTextWriter(string filename, System.Text.Encoding encoding, Profile profile, bool automaticallyCleanInvalicXmlCharacters = false)
         {
-            get
+            this.TextWriter = XmlWriter.Create(filename, new XmlWriterSettings()
             {
-                return this.TextWriter.Formatting;
-            }
-            set
+                Encoding = encoding,
+                Indent = true
+            });
+
+            this.CurrentProfile = profile;
+            this._AutomaticallyCleanInvalidXmlCharacters = automaticallyCleanInvalicXmlCharacters;
+        } // !ProfileAwareXmlTextWriter()
+
+
+        public ProfileAwareXmlTextWriter(System.IO.Stream w, Profile profile, bool automaticallyCleanInvalicXmlCharacters = false)
+        {
+            this.TextWriter = XmlWriter.Create(w, new XmlWriterSettings()
             {
-                this.TextWriter.Formatting = value;
-            }
-        }
-
-
-        public ProfileAwareXmlTextWriter(string filename, System.Text.Encoding encoding, Profile profile)
-        {
-            this.TextWriter = new XmlTextWriter(filename, encoding);
+                Encoding = new UTF8Encoding(false, true),
+                Indent = true
+            });
             this.CurrentProfile = profile;
-        }
-
-
-        public ProfileAwareXmlTextWriter(System.IO.Stream w, System.Text.Encoding encoding, Profile profile)
-        {
-            this.TextWriter = new XmlTextWriter(w, encoding);
-            this.CurrentProfile = profile;
-        }
+            this._AutomaticallyCleanInvalidXmlCharacters = automaticallyCleanInvalicXmlCharacters;
+        } // !ProfileAwareXmlTextWriter()
 
 
         public void Close()
         {
             this.TextWriter?.Close();
-        }
+        } // !Close()
 
 
         public void Flush()
         {
             this.TextWriter?.Flush();
-        }
+        } // !Flush()
 
 
-        public void WriteStartElement(string prefix, string localName, string ns, Profile profile = Profile.Unknown)
+        public void WriteStartElement(string prefix, string localName, Profile profile = Profile.Unknown)
         {
-            Profile _profile = profile;
+            Profile safeProfile = profile;
             if (profile == Profile.Unknown)
             {
-                _profile = this.CurrentProfile;
+                safeProfile = this.CurrentProfile;
             }
 
-            if (!_IsNodeVisible() || !_DoesProfileFitToCurrentProfile(_profile))
+            if (!_IsNodeVisible() || !_DoesProfileFitToCurrentProfile(safeProfile))
             {
-                this.XmlStack.Push(new StackInfo() { Profile = _profile, IsVisible = false });
+                this.XmlStack.Push(new StackInfo() { Profile = safeProfile, IsVisible = false });
                 return;
             }
             else
             {
-                this.XmlStack.Push(new StackInfo() { Profile = _profile, IsVisible = true });
+                this.XmlStack.Push(new StackInfo() { Profile = safeProfile, IsVisible = true });
             }
 
-            // write value
-            if (!String.IsNullOrEmpty(prefix))
+            if (this.TextWriter == null)
             {
-                this.TextWriter?.WriteStartElement(prefix, localName, ns);
+                return;
             }
-            else if (!String.IsNullOrEmpty(ns))
+
+            string ns = Namespaces.ContainsKey(prefix) ? Namespaces[prefix] : null;
+
+            // write value
+            if (!String.IsNullOrWhiteSpace(prefix))
             {
-                this.TextWriter?.WriteStartElement(localName, ns);
+                this.TextWriter.WriteStartElement(prefix, localName, ns);
+            }
+            else if (!String.IsNullOrWhiteSpace(ns))
+            {
+                this.TextWriter.WriteStartElement(localName, ns);
             }
             else
             {
-                this.TextWriter?.WriteStartElement(localName);
+                this.TextWriter.WriteStartElement(localName);
             }
         } // !WriteStartElement()
 
@@ -116,36 +131,77 @@ namespace s2industries.ZUGFeRD
             StackInfo infoForCurrentXmlLevel = this.XmlStack.Pop();
             if (_DoesProfileFitToCurrentProfile(infoForCurrentXmlLevel.Profile) && _IsNodeVisible())
             {
+                if (_NeedToIndentEndElement)
+                {
+                    WriteRawIndention();
+                    _NeedToIndentEndElement = false;
+                }
+
                 this.TextWriter?.WriteEndElement();
             }
-        }
+        } // !WriteEndElement()
+
+
+        public void WriteOptionalElementString(string prefix, string tagName, string value, Profile profile = Profile.Unknown)
+        {
+            if (String.IsNullOrWhiteSpace(value))
+            {
+                return;
+            }
+
+            if (!_IsValidXmlString(value))
+            {
+                if (_AutomaticallyCleanInvalidXmlCharacters == true)
+                {
+                    value = _CleanInvalidXmlChars(value);                    
+                }
+                else
+                {
+                    throw new IllegalCharacterException($"'{value}' contains illegal characters for xml.");
+                }
+            }
+
+            WriteElementString(prefix, tagName, value, profile);
+        } // !WriteOptionalElementString()
 
 
         public void WriteElementString(string prefix, string localName, string ns, string value, Profile profile = Profile.Unknown)
         {
-            Profile _profile = profile;
-            if (profile == Profile.Unknown)
+            if (!_IsValidXmlString(value))
             {
-                _profile = this.CurrentProfile;
+                if (_AutomaticallyCleanInvalidXmlCharacters == true)
+                {
+                    value = _CleanInvalidXmlChars(value);
+                }
+                else
+                {
+                    throw new IllegalCharacterException($"'{value}' contains illegal characters for xml.");
+                }
             }
 
-            if (!_IsNodeVisible() || !_DoesProfileFitToCurrentProfile(_profile))
+            Profile safeProfile = profile;
+            if (profile == Profile.Unknown)
+            {
+                safeProfile = this.CurrentProfile;
+            }
+
+            if (this.TextWriter == null || !_IsNodeVisible() || !_DoesProfileFitToCurrentProfile(safeProfile))
             {
                 return;
             }
 
             // write value
-            if (!String.IsNullOrEmpty(prefix))
+            if (!String.IsNullOrWhiteSpace(prefix))
             {
-                this.TextWriter?.WriteElementString(prefix, localName, ns, value);
+                this.TextWriter.WriteElementString(prefix, localName, ns, value);
             }
-            else if (!String.IsNullOrEmpty(ns))
+            else if (!String.IsNullOrWhiteSpace(ns))
             {
-                this.TextWriter?.WriteElementString(localName, ns, value);
+                this.TextWriter.WriteElementString(localName, ns, value);
             }
             else
             {
-                this.TextWriter?.WriteElementString(localName, value);
+                this.TextWriter.WriteElementString(localName, value);
             }
         } // !WriteElementString()
 
@@ -167,7 +223,7 @@ namespace s2industries.ZUGFeRD
         }
 
 
-        public void WriteAttributeString(string prefix, string localName, string ns, string value, Profile profile = Profile.Unknown)
+        public void WriteAttributeString(string prefix, string localName, string value, Profile profile = Profile.Unknown)
         {
             StackInfo infoForCurrentNode = this.XmlStack.First();
             if (!infoForCurrentNode.IsVisible)
@@ -185,13 +241,9 @@ namespace s2industries.ZUGFeRD
             }
 
             // write value
-            if (!String.IsNullOrEmpty(prefix))
+            if (!String.IsNullOrWhiteSpace(prefix))
             {
-                this.TextWriter?.WriteAttributeString(prefix, localName, ns, value);
-            }
-            else if (!String.IsNullOrEmpty(ns))
-            {
-                this.TextWriter?.WriteAttributeString(localName, ns, value);
+                this.TextWriter?.WriteAttributeString(prefix, localName, null, value);
             }
             else
             {
@@ -202,6 +254,18 @@ namespace s2industries.ZUGFeRD
 
         public void WriteValue(string value, Profile profile = Profile.Unknown)
         {
+            if (!_IsValidXmlString(value))
+            {
+                if (_AutomaticallyCleanInvalidXmlCharacters == true)
+                {
+                    value = _CleanInvalidXmlChars(value);
+                }
+                else
+                {
+                    throw new IllegalCharacterException($"'{value}' contains illegal characters for xml.");
+                }
+            }
+
             StackInfo infoForCurrentNode = this.XmlStack.First();
             if (!infoForCurrentNode.IsVisible)
             {
@@ -211,6 +275,84 @@ namespace s2industries.ZUGFeRD
             // write value
             this.TextWriter?.WriteValue(value);
         } // !WriteAttributeString()
+
+
+        public void WriteComment(string comment, Profile profile = Profile.Unknown)
+        {
+            if (!_IsValidXmlString(comment))
+            {
+                if (_AutomaticallyCleanInvalidXmlCharacters == true)
+                {
+                    comment = _CleanInvalidXmlChars(comment);
+                }
+                else
+                {
+                    throw new IllegalCharacterException($"'{comment}' contains illegal characters for xml.");
+                }
+            }
+
+            StackInfo infoForCurrentNode = this.XmlStack.FirstOrDefault();
+            if ((infoForCurrentNode != null) && !infoForCurrentNode.IsVisible)
+            {
+                return;
+            }
+
+            // write value
+            this.TextWriter?.WriteComment(comment);
+        } // !WriteComment()
+
+
+        public void WriteRawString(string value, Profile profile = Profile.Unknown)
+        {
+            if (!_IsValidXmlString(value))
+            {
+                if (_AutomaticallyCleanInvalidXmlCharacters == true)
+                {
+                    value = _CleanInvalidXmlChars(value);
+                }
+                else
+                {
+                    throw new IllegalCharacterException($"'{value}' contains illegal characters for xml.");
+                }
+            }
+
+            StackInfo infoForCurrentNode = this.XmlStack.First();
+            if (!infoForCurrentNode.IsVisible)
+            {
+                return;
+            }
+
+            _NeedToIndentEndElement = true;
+
+            // write value
+            this.TextWriter?.WriteString(value);
+        } // !WriteRawString()
+
+
+        /// <summary>
+        /// Writes the raw indention using IndentChars according to the current xml tree position.
+        /// </summary>
+        public void WriteRawIndention(Profile profile = Profile.Unknown)
+        {
+            if (this.TextWriter == null)
+            {
+                return;
+            }
+
+            StackInfo infoForCurrentNode = this.XmlStack.First();
+            if (!infoForCurrentNode.IsVisible)
+            {
+                return;
+            }
+
+            _NeedToIndentEndElement = true;
+
+            // write value
+            for (int i = 0; i < this.XmlStack.Count; i++)
+            {
+                this.TextWriter?.WriteString(this.TextWriter.Settings.IndentChars);
+            }
+        } // !WriteRawIndention()
 
 
         #region Stack Management
@@ -230,11 +372,11 @@ namespace s2industries.ZUGFeRD
 
 
         private bool _IsNodeVisible()
-        {            
+        {
             foreach (StackInfo stackInfo in this.XmlStack)
             {
                 if (!stackInfo.IsVisible)
-                { 
+                {
                     return false;
                 }
             }
@@ -244,41 +386,74 @@ namespace s2industries.ZUGFeRD
         #endregion // !Stack Management
 
 
-        #region Convience functions
-        public void WriteElementString(string localName, string ns, string value, Profile profile = Profile.Unknown)
+        #region Convenience functions
+        public void WriteElementString(string prefix, string localName, string value, Profile profile = Profile.Unknown)
         {
-            this.WriteElementString(null, localName, ns, value, profile);
-        } // !WriteElementString()
-
-
-        public void WriteElementString(string localName, string value, Profile profile = Profile.Unknown)
-        {
-            this.WriteElementString(null, localName, null, value, profile);
+            this.WriteElementString(prefix, localName, null, value, profile);
         } // !WriteElementString()
 
 
         public void WriteAttributeString(string localName, string value, Profile profile = Profile.Unknown)
         {
-            this.WriteAttributeString(null, localName, null, value, profile);
-        } // !WriteAttributeString()
+            this.WriteAttributeString(null, localName, value, profile);
+        } // !WriteAttributeString(
 
 
-        public void WriteAttributeString(string localName, string ns, string value, Profile profile = Profile.Unknown)
+        internal void SetNamespaces(Dictionary<string, string> namespaces)
         {
-            this.WriteAttributeString(null, localName, ns, value, profile);
-        } // !WriteAttributeString()
-
-
-        public void WriteStartElement(string localName, Profile profile = Profile.Unknown)
-        {
-            this.WriteStartElement(null, localName, null, profile);
-        } // !WriteStartElement()
-
-
-        public void WriteStartElement(string localName, string ns, Profile profile = Profile.Unknown)
-        {
-            this.WriteStartElement(null, localName, ns, profile);
-        } // !WriteStartElement()
+            this.Namespaces = namespaces;
+        }
         #endregion // !Convenience functions
+
+
+        #region Cleanup functions
+        /// <summary>
+        /// Make sure that the given string does not contain invalid xml characters.
+        /// The invalid characters are removed from the string
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        private string _CleanInvalidXmlChars(string input)
+        {
+            var output = new StringBuilder(input.Length);
+            foreach (char c in input)
+            {
+                if (_IsValidXmlChar(c))
+                {
+                    output.Append(c);
+                }
+            }
+            return output.ToString();
+        } // !_CleanInvalidXmlChars()
+
+
+        private bool _IsValidXmlString(string input)
+        {
+            if (String.IsNullOrWhiteSpace(input))
+            {
+                return true; // empty strings are valid
+            }
+
+            foreach (char c in input)
+            {
+                if (!_IsValidXmlChar(c))
+                {
+                    return false;
+                }
+            }
+            return true;
+        } // !_IsValidXmlString()
+        
+
+        private bool _IsValidXmlChar(char c)
+        {
+            return
+                c == 0x9 || c == 0xA || c == 0xD ||
+                (c >= 0x20 && c <= 0xD7FF) ||
+                (c >= 0xE000 && c <= 0xFFFD) ||
+                (c >= 0x10000 && c <= 0x10FFFF);
+        } // !_IsValidXmlChar()
+
+        #endregion // !Cleanup function
     }
 }

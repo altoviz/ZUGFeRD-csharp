@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace s2industries.ZUGFeRD
@@ -37,6 +38,15 @@ namespace s2industries.ZUGFeRD
         ProductEndUserTradeParty,
         BuyerAgentTradeParty,
         InvoicerTradeParty,
-        PayerTradeParty
+        PayerTradeParty,
+        SellerTaxRepresentativeTradeParty
+    }
+
+    internal static class PartyTypeExtensions
+    {
+        internal static bool In(this PartyTypes partyType, params PartyTypes[] allowedPartyTypes)
+        {
+            return allowedPartyTypes.Contains(partyType);
+        }
     }
 }

@@ -49,17 +49,17 @@ namespace s2industries.ZUGFeRD
         /// 
         /// The schema of identification must be composed of the entries of the list published by the ISO/IEC 6523 Maintenance Agency.
         /// </summary>
-        public GlobalIDSchemeIdentifiers SchemeID { get; set; }
+        public GlobalIDSchemeIdentifiers? SchemeID { get; set; }
 
 
         public GlobalID()
         {
-            this.ID = "";
-            this.SchemeID = GlobalIDSchemeIdentifiers.Unknown;
+            this.ID = String.Empty;
+            this.SchemeID = null;
         } // !GlobalID()
 
 
-        public GlobalID(GlobalIDSchemeIdentifiers schemeID, string ID)
+        public GlobalID(GlobalIDSchemeIdentifiers? schemeID, string ID)
         {
             this.ID = ID;
             this.SchemeID = schemeID;

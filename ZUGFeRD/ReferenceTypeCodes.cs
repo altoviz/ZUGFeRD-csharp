@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -26,17 +26,12 @@ namespace s2industries.ZUGFeRD
 {
     /// <summary>
     /// Sources:
-    /// http://www.unece.org/trade/untdid/d13b/tred/tred1153.htm
+    /// https://service.unece.org/trade/untdid/d21a/tred/tred1153.htm
     /// and
     /// https://www.xrepository.de/details/urn:xoev-de:kosit:codeliste:untdid.1153_3#version
     /// </summary>
     public enum ReferenceTypeCodes
     {
-        /// <summary>
-        /// Unknown/ invalid value
-        /// </summary>
-        Unknown = 0, 
-
         /// <summary>
         /// Auftragsbestätigungsnummer
         /// </summary>
@@ -69,7 +64,7 @@ namespace s2industries.ZUGFeRD
 
         /// <summary>
         /// Transportdokumenten-Nummer
-        /// 
+        ///
         /// Referenz zu einem Transportdokument, vergeben vom Frachtführer oder seinem Agenten. (z.B.
         /// Paketdienst-Zustell-Nr.)
         /// </summary>
@@ -82,7 +77,7 @@ namespace s2industries.ZUGFeRD
 
         /// <summary>
         /// Vehicle licence number
-        /// 
+        ///
         /// Number of the licence issued for a vehicle by an agency of government.
         /// </summary>
         ABZ,
@@ -111,7 +106,7 @@ namespace s2industries.ZUGFeRD
 
         /// <summary>
         /// Nummer einer Rücksendungsanzeige
-        /// 
+        ///
         /// Referenznummer für eine Rücksendungsanzeige. (z.B. Retourennummer)
         /// </summary>
         ALQ,
@@ -148,13 +143,19 @@ namespace s2industries.ZUGFeRD
         AWR,
 
         /// <summary>
+        /// Aktueller Anfangszählerstand
+        /// (z.B. Kilometerstand eines Fahrzeugs)
+        /// </summary>
+        BA,
+
+        /// <summary>
         /// Rahmenauftragsnummer
         /// </summary>
         BO,
 
         /// <summary>
         /// Vertragsnummer (Käufer)
-        /// 
+        ///
         /// Referenznummer vergeben vom Käufer für einen Vertrag (z.B. Abkommennummer)
         /// </summary>
         BC,
@@ -170,6 +171,13 @@ namespace s2industries.ZUGFeRD
         DL,
 
         /// <summary>
+        /// Lieferscheinnummer
+        ///
+        ///  Delivery note number
+        /// </summary>
+        DQ,
+
+        /// <summary>
         /// Invoice document identifier
         /// [1334]
         /// Reference number to identify an invoice.
@@ -178,7 +186,7 @@ namespace s2industries.ZUGFeRD
 
         /// <summary>
         /// Zählernummer
-        /// 
+        ///
         /// z.B. Zählpunktbezeichnung
         /// </summary>
         MG,
@@ -187,6 +195,13 @@ namespace s2industries.ZUGFeRD
         /// Vorherige Rechnungsnummer
         /// </summary>
         OI,
+
+        /// <summary>
+        /// Order document identifier, buyer assigned
+        /// [1022] 
+        /// Identifier assigned by the buyer to an order.
+        /// </summary>
+        ON,
 
         /// <summary>
         /// Preisliste
@@ -209,6 +224,11 @@ namespace s2industries.ZUGFeRD
         PP,
 
         /// <summary>
+        /// Seriennummer
+        /// </summary>
+        SE,
+
+        /// <summary>
         /// Transportauftragsnummer
         /// </summary>
         TIN,
@@ -217,27 +237,5 @@ namespace s2industries.ZUGFeRD
         /// Auftragsnummer (Lieferant)
         /// </summary>
         VN
-    }
-
-
-    internal static class ReferenceTypeCodesExtensions
-    {
-        public static ReferenceTypeCodes FromString(this ReferenceTypeCodes _, string s)
-        {
-            try
-            {
-                return (ReferenceTypeCodes)Enum.Parse(typeof(ReferenceTypeCodes), s);
-            }
-            catch
-            {
-                return ReferenceTypeCodes.Unknown;
-            }
-        } // !FromString()
-
-
-        public static string EnumToString(this ReferenceTypeCodes c)
-        {
-            return c.ToString("g");
-        } // !ToString()
     }
 }

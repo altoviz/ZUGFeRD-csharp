@@ -31,13 +31,44 @@ namespace s2industries.ZUGFeRD
         /// Version 1.x - first public ZUGFeRD version
         /// </summary>
         Version1 = 100,
+
         /// <summary>
         /// Version 2.0 - second major ZUGFeRD version 
         /// </summary>
         Version20 = 200,
+
         /// <summary>
-        /// Version 2.1 - unified with french factur-x 1.0, supports XRechnung
+        /// Version 2.3 - unified with french factur-x 1.0, supports XRechnung
         /// </summary>
-        Version21 = 210
+        Version23 = 230
+    }
+
+
+
+
+    internal static class ZUGFeRDVersionExtensions
+    {
+        public static ZUGFeRDVersion FromString(this ZUGFeRDVersion _, string s)
+        {
+            return EnumExtensions.StringToEnum<ZUGFeRDVersion>(s);
+        } // !FromString()
+
+
+        public static string EnumToString(this ZUGFeRDVersion c)
+        {
+            return EnumExtensions.EnumToString<ZUGFeRDVersion>(c);
+        } // !ToString()
+
+
+        public static string GetDottedVersion(this ZUGFeRDVersion c)
+        {
+            switch (c)
+            {
+                case ZUGFeRDVersion.Version1: return "1.0";
+                case ZUGFeRDVersion.Version20: return "2.0";
+                case ZUGFeRDVersion.Version23: return "2.3";
+                default: return string.Empty;
+            }
+        } // !GetDottedVersion()
     }
 }
